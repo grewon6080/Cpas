@@ -16,7 +16,7 @@ public class Place {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id; //Long 고려
+    private Long id; //Long 고려
 
     @Column
     private String region;

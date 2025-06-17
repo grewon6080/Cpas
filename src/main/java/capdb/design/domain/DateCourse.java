@@ -37,9 +37,11 @@ public class DateCourse {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Builder.Default
     @OneToMany(mappedBy = "dateCourse", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DateCoursePlace> places = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "dateCourse", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DateCourseLeg> legs = new ArrayList<>();
 }

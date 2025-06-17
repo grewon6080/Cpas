@@ -12,7 +12,7 @@ import java.util.List;
 
 @SpringBootApplication
 public class DesignApplication {
-
+	//git 테스트 add
 	public static void main(String[] args) {
 		SpringApplication.run(DesignApplication.class, args);
 	}

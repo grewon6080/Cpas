@@ -7,27 +7,39 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "date_course")
+@Table(name = "datecourses")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class DateCourse {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id; //Long 고려
-
-    // 코스 작성자
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private Users user;
+    private Long id;
 
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
+    private String dateRegion;
+
     private LocalDate date;
+
+    private LocalDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @OneToMany(mappedBy = "dateCourse", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DateCoursePlace> places = new ArrayList<>();
+
+    @OneToMany(mappedBy = "dateCourse", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DateCourseLeg> legs = new ArrayList<>();
 }

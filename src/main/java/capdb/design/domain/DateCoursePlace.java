@@ -4,8 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "date_course_place")
+@Table(name = "datecourse_places")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -15,16 +16,14 @@ public class DateCoursePlace {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 어떤 코스에 포함된 장소인지
+    private int orderIndex;         // 장소 순서
+    private int durationMinutes;    // 체류 시간(분 단위)
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "date_course_id", nullable = false)
+    @JoinColumn(name = "datecourse_id")
     private DateCourse dateCourse;
 
-    //저장된 장소
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "place_id", nullable = false)
+    @JoinColumn(name = "place_id")
     private Place place;
-
-    @Column(name = "place_order")
-    private Integer placeOrder;
 }

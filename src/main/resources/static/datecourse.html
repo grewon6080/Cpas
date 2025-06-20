@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>나의 데이트 코스</title>
+</head>
+<body>
+<h2>나의 데이트 코스 목록</h2>
+<ul id="course-list"></ul>
+<script>
+    const userId = 1; // 실제 로그인된 사용자의 ID
+    fetch(`/mypage/${userId}/datecourse`)
+      .then(res => res.json())
+      .then(data => {
+          const ul = document.getElementById('course-list');
+          data.forEach(c => {
+              const li = document.createElement('li');
+              li.innerHTML = `
+                <strong>${c.title}</strong> (${c.dateRegion}, ${c.date})
+                <button onclick="location.href='searchdatecourse.html?courseId=${c.id}'">수정</button>
+              `;
+              ul.appendChild(li);
+          });
+      });
+</script>
+</body>
+</html>

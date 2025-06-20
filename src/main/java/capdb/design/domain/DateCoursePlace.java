@@ -26,4 +26,10 @@ public class DateCoursePlace {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "place_id")
     private Place place;
+
+    public void update(int orderIndex, int durationMinutes) {
+        this.orderIndex = orderIndex;
+        this.durationMinutes = durationMinutes;
+    }
+
 }

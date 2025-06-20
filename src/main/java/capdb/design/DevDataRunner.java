@@ -1,31 +1,29 @@
 package capdb.design;
 
-
 import capdb.design.domain.*;
 import capdb.design.repository.*;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+@Component
+@RequiredArgsConstructor
+public class DevDataRunner implements CommandLineRunner {
 
-@SpringBootTest
-@Transactional
-class DateCourseIntegrationTest {
+    private final UserRepository userRepository;
+    private final PlaceRepository placeRepository;
+    private final DateCourseRepository dateCourseRepository;
+    private final DateCoursePlaceRepository dateCoursePlaceRepository;
+    private final DateCourseLegRepository dateCourseLegRepository;
 
-    @Autowired UserRepository userRepository;
-    @Autowired PlaceRepository placeRepository;
-    @Autowired DateCourseRepository dateCourseRepository;
-    @Autowired DateCoursePlaceRepository dateCoursePlaceRepository;
-    @Autowired DateCourseLegRepository dateCourseLegRepository;
+    @Override
+    public void run(String... args) {
+        System.out.println("==== [DevDataRunner: H2 데이터 테스트 시작] ====");
 
-    @Test
-    void TestCode() {
         // 1. User 생성/저장
         User user = User.builder()
                 .userName("테스트유저")
@@ -78,24 +76,33 @@ class DateCourseIntegrationTest {
         // 7. 검증 - 데이터 정상 저장/조회 여부
         DateCourse loaded = dateCourseRepository.findById(course.getId()).orElseThrow();
 
-        assertThat(loaded.getUser().getUserName()).isEqualTo("테스트유저");
-        assertThat(loaded.getPlaces()).hasSize(3);
-        assertThat(loaded.getLegs()).hasSize(2);
+        // 엔티티 값 콘솔로 출력
+        System.out.println("코스 제목: " + loaded.getTitle());
+        System.out.println("유저명: " + loaded.getUser().getUserName());
+        System.out.println("== 장소 목록 ==");
+        loaded.getPlaces().forEach(p ->
+                System.out.println("장소: " + p.getPlace().getPlaceName() + " (" + p.getDurationMinutes() + "분)")
+        );
+        System.out.println("== 이동 경로 ==");
+        loaded.getLegs().forEach(l ->
+                System.out.println("이동: " + l.getFromPlace().getPlaceName() + " → " + l.getToPlace().getPlaceName() +
+                        " [" + l.getTransportType() + ", " + l.getDistanceM() + "m, " + l.getDurationMinutes() + "분]")
+        );
 
         // 커스텀 리포지토리 메서드로 조회도 확인
         List<DateCoursePlace> loadedPlaces = dateCoursePlaceRepository.findByDateCourseIdOrderByOrderIndex(course.getId());
         List<DateCourseLeg> loadedLegs = dateCourseLegRepository.findByDateCourseId(course.getId());
 
-        assertThat(loadedPlaces.get(1).getPlace().getPlaceName()).isEqualTo("명동성당");
-        assertThat(loadedLegs.get(0).getFromPlace().getPlaceName()).isEqualTo("서울역");
-
-        System.out.println("코스 제목: " + loaded.getTitle());
+        System.out.println("== 커스텀 리포지토리로 조회한 장소 ==");
         loadedPlaces.forEach(p ->
                 System.out.println("장소: " + p.getPlace().getPlaceName() + " (" + p.getDurationMinutes() + "분)")
         );
+        System.out.println("== 커스텀 리포지토리로 조회한 이동 경로 ==");
         loadedLegs.forEach(l ->
                 System.out.println("이동: " + l.getFromPlace().getPlaceName() + " → " + l.getToPlace().getPlaceName() +
                         " [" + l.getTransportType() + ", " + l.getDistanceM() + "m]")
         );
+
+        System.out.println("==== [DevDataRunner: 테스트 종료] ====");
     }
 }

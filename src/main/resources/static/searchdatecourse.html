@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>코스 상세 정보</title>
+</head>
+<body>
+<h2>코스 상세 정보</h2>
+<div id="course-detail"></div>
+<script>
+    // 쿼리스트링에서 courseId 추출
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseId = urlParams.get('courseId');
+
+    fetch(`/mypage/searchdatecourse/${courseId}`)
+      .then(res => res.json())
+      .then(data => {
+          let html = `<b>코스명:</b> ${data.title}<br>`;
+          html += `<b>지역:</b> ${data.dateRegion}<br>`;
+          html += `<b>날짜:</b> ${data.date}<br>`;
+          html += `<h3>장소 목록</h3><ol>`;
+          data.places.forEach(p => {
+              html += `<li>${p.placeName} (순서:${p.orderIndex}, 머무는 시간:${p.durationMinutes}분)</li>`;
+          });
+          html += `</ol><h3>이동 구간</h3><ul>`;
+          data.legs.forEach(l => {
+              html += `<li>${l.fromPlaceId} → ${l.toPlaceId} (${l.transportType}, ${l.distanceM}m, ${l.durationMinutes}분)</li>`;
+          });
+          html += `</ul>`;
+          document.getElementById('course-detail').innerHTML = html;
+      });
+</script>
+</body>
+</html>

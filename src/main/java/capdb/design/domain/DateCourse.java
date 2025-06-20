@@ -44,4 +44,11 @@ public class DateCourse {
     @Builder.Default
     @OneToMany(mappedBy = "dateCourse", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DateCourseLeg> legs = new ArrayList<>();
+
+    public void update(String title, String dateRegion, LocalDate date) {
+        this.title = title;
+        this.dateRegion = dateRegion;
+        this.date = date;
+    }
+
 }

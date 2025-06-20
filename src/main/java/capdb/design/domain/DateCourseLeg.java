@@ -31,4 +31,10 @@ public class DateCourseLeg {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "to_place_id")
     private Place toPlace;
+
+    public void update(String transportType, int distanceM, int durationMinutes) {
+        this.transportType = transportType;
+        this.distanceM = distanceM;
+        this.durationMinutes = durationMinutes;
+    }
 }

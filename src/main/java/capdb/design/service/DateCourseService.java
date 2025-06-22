@@ -1,64 +1,103 @@
 package capdb.design.service;
 
-import capdb.design.domain.DateCourse;
-import capdb.design.domain.User;
-import capdb.design.dto.DateCourseRequest;
-import capdb.design.dto.DateCourseResponse;
-import capdb.design.repository.DateCourseRepository;
-import capdb.design.repository.UserRepository;
+import capdb.design.domain.*;
+import capdb.design.dto.*;
+import capdb.design.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class DateCourseService {
 
-    private final DateCourseRepository dateCourseRepo;
+    private final DateCourseRepository courseRepo;
     private final UserRepository userRepo;
+    private final PlaceRepository placeRepo;
 
-    // 생성
-    public Long createCourse(Long userId, DateCourseRequest req) {
-        User user = userRepo.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
-        DateCourse course = DateCourse.builder()
+    /** CREATE **/
+    public Long createDateCourse(Long userId, DateCourseRequest req) {
+        User user = userRepo.findById(userId).orElseThrow();
+        DateCourse c = DateCourse.builder()
+                .user(user)
                 .title(req.title())
                 .dateRegion(req.dateRegion())
                 .date(req.date())
                 .createdAt(LocalDateTime.now())
-                .user(user)
                 .build();
-        dateCourseRepo.save(course);
-        return course.getId();
+        return courseRepo.save(c).getId();
     }
 
-    // 사용자별 코스 목록 조회
+
+    /** READ 목록 **/
     @Transactional(readOnly = true)
-    public List<DateCourseResponse> getCourses(Long userId) {
-        List<DateCourse> list = dateCourseRepo.findByUserId(userId);
+    public List<DateCourseResponse> readListByUser(Long userId) {
+        List<DateCourse> courses = courseRepo.findByUserId(userId);
         List<DateCourseResponse> result = new ArrayList<>();
-        for (DateCourse c : list) {
-            result.add(new DateCourseResponse(
-                    c.getId(), c.getTitle(), c.getDateRegion(), c.getDate(), c.getCreatedAt()
-            ));
+        for (DateCourse course : courses) {
+            DateCourseResponse dto = toDto(course);
+            result.add(dto);
         }
         return result;
     }
 
-    // 수정 (엔티티 update 메서드 사용)
-    public void updateCourse(Long courseId, DateCourseRequest req) {
-        DateCourse c = dateCourseRepo.findById(courseId)
-                .orElseThrow(() -> new IllegalArgumentException("코스 없음"));
-        c.update(req.title(), req.dateRegion(), req.date());
+
+    /** UPDATE 코스 정보(title, dateRegion, date)  **/
+    public void updateDateCourse(Long id, DateCourseRequest req) {
+        courseRepo.findById(id).orElseThrow()
+                .update(req.title(), req.dateRegion(), req.date());
     }
 
-    // 삭제
-    public void deleteCourse(Long courseId) {
-        dateCourseRepo.deleteById(courseId);
+    /**UPDATE 장소 추가**/
+    public DateCoursePlaceResponse addPlace(Long courseId, DateCoursePlaceRequest req) {
+        DateCourse course = courseRepo.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("코스 없음"));
+        Place place = placeRepo.findById(req.placeId())
+                .orElseThrow(() -> new IllegalArgumentException("장소 없음"));
+
+        DateCoursePlace entry = DateCoursePlace.builder()
+                .dateCourse(course)
+                .place(place)
+                .orderIndex(req.orderIndex())
+                .duration(req.duration())
+                .memo(req.memo())
+                .build();
+        course.getPlaces().add(entry);
+        return toPlaceDto(entry);
+    }
+
+    /**UPDATE orderIndex **/
+    public void updateOrderIndexes(DateCourse course, List<OrderIndexDto> orderList) {
+        List<DateCoursePlace> places = course.getPlaces();
+        for (int i = 0; i < places.size(); i++) {
+            DateCoursePlace entry = places.get(i);
+            entry.updateOrder(orderList.get(i).orderIndex());
+        }
+    }
+
+    /** DELETE **/
+    public void delete(Long id) { courseRepo.deleteById(id); }
+
+
+    /** Dto 변환 **/
+    private DateCourseResponse toDto(DateCourse c) {
+        return new DateCourseResponse(
+                c.getId(), c.getTitle(), c.getDateRegion(),
+                c.getDate(), c.getCreatedAt());
+    }
+
+    private DateCoursePlaceResponse toPlaceDto(DateCoursePlace e){
+        return new DateCoursePlaceResponse(
+                e.getId(),
+                e.getPlace().getId(),
+                e.getPlace().getPlaceName(),
+                e.getOrderIndex(), e.getDuration(), e.getMemo()
+        );
     }
 }
+

@@ -6,36 +6,34 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Entity
-@Table(name = "place")
+@Table(name="places")
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 @Builder
+@AllArgsConstructor
 public class Place {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String placeName;
+    private String  placeName;
+    private String  address;
+    private Integer regionCode;
 
-    private String address;
+    private String  placeId;
 
-    private String placeId; // 외부 API(카카오/네이버 등) 연동용 고유값
+    @Column(precision = 10, scale = 7)
+    private BigDecimal latitude;
 
-    private Double latitude;
+    @Column(precision = 10, scale = 7)
+    private BigDecimal longitude;
 
-    private Double longitude;
+    private String categoryGroupCode;
+    private String placePhoneNumb;
+    private String placeUrl;
 
-    private String regionCode;
-
-    public void update(String placeName, String address, String placeId, Double latitude, Double longitude, String regionCode) {
-        this.placeName = placeName;
-        this.address = address;
-        this.placeId = placeId;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.regionCode = regionCode;
-    }
 }
+

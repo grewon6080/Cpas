@@ -4,34 +4,30 @@ package capdb.design.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
-//@EntityListeners(AuditingEntityListener.class) //엔티티 생성 및 수정 시간 자동기록, 감시
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
-@Table(name = "users")
+@Table(name="users")
 @Getter
-@Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @Builder
+@AllArgsConstructor
 public class User {
 
-
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String userName;
-
     private String email;
-
+    private Integer age;
+    private String gender;
     private String provider;
-
     private String password;
 
-    public void update(String userName, String email, String provider, String password) {
-        this.userName = userName;
-        this.email = email;
-        this.provider = provider;
-        this.password = password;
-    }
+//    @Builder.Default
+//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<DateCourse> dateCourses = new ArrayList<>();
+
 }
+

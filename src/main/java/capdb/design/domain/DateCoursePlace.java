@@ -3,10 +3,12 @@ package capdb.design.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.awt.image.ImagingOpException;
+import java.time.LocalTime;
+
 @Entity
 @Table(name = "datecourse_places")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -16,9 +18,6 @@ public class DateCoursePlace {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int orderIndex;         // 장소 순서
-    private int durationMinutes;    // 체류 시간(분 단위)
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "datecourse_id")
     private DateCourse dateCourse;
@@ -27,9 +26,22 @@ public class DateCoursePlace {
     @JoinColumn(name = "place_id")
     private Place place;
 
-    public void update(int orderIndex, int durationMinutes) {
+    private LocalTime duration;   //체류 시간
+    private Integer   orderIndex; //장소 순서
+    private String    memo;
+
+
+
+    public void updateDuration(LocalTime duration){
+        this.duration = duration;
+    }
+
+    public void updateOrder(Integer orderIndex){
         this.orderIndex = orderIndex;
-        this.durationMinutes = durationMinutes;
+    }
+
+    public void updateMemo(String memo){
+        this.memo = memo;
     }
 
 }

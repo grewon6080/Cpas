@@ -12,38 +12,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "datecourses")
+@Table(name="datecourses")
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 @Builder
+@AllArgsConstructor
 public class DateCourse {
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String title;
-
-    private String dateRegion;
-
-    private LocalDate date;
-
-    private LocalDateTime createdAt;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    private LocalDate date;
+    private String title;
+    private String dateRegion;
+    private LocalDateTime createdAt;
 
     @Builder.Default
     @OneToMany(mappedBy = "dateCourse", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DateCoursePlace> places = new ArrayList<>();
 
-    @Builder.Default
-    @OneToMany(mappedBy = "dateCourse", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DateCourseLeg> legs = new ArrayList<>();
 
     public void update(String title, String dateRegion, LocalDate date) {
         this.title = title;

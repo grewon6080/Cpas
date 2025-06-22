@@ -1,108 +1,94 @@
 package capdb.design;
 
 import capdb.design.domain.*;
+import capdb.design.dto.*;
 import capdb.design.repository.*;
+import capdb.design.service.DateCourseService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DevDataRunner implements CommandLineRunner {
 
-    private final UserRepository userRepository;
-    private final PlaceRepository placeRepository;
-    private final DateCourseRepository dateCourseRepository;
-    private final DateCoursePlaceRepository dateCoursePlaceRepository;
-    private final DateCourseLegRepository dateCourseLegRepository;
+    private final UserRepository userRepo;
+    private final PlaceRepository placeRepo;
+    private final DateCourseRepository courseRepo;
+    private final DateCourseService courseService;
 
     @Override
+    @Transactional
     public void run(String... args) {
-        System.out.println("==== [DevDataRunner: H2 데이터 테스트 시작] ====");
 
-        // 1. User 생성/저장
-        User user = User.builder()
-                .userName("테스트유저")
-                .email("test@example.com")
-                .provider("google")
-                .password("pw1234")
-                .build();
-        userRepository.save(user);
+        log.info("==== DevDataRunner 시작 ====");
 
-        // 2. Place 3개 생성/저장
-        Place a = Place.builder().placeName("서울역").address("서울 중구").latitude(37.555).longitude(126.970).build();
-        Place b = Place.builder().placeName("명동성당").address("서울 중구").latitude(37.563).longitude(126.987).build();
-        Place c = Place.builder().placeName("청계천").address("서울 종로구").latitude(37.570).longitude(126.977).build();
-        placeRepository.saveAll(List.of(a, b, c));
+        /* 1. User, Place 더미 데이터 */
+        User user = userRepo.save(
+                User.builder().userName("테스터").email("tester@demo.com")
+                        .age(30).gender("M").provider("local").password("pw").build());
 
-        // 3. DateCourse 생성 (연관관계 설정)
-        DateCourse course = DateCourse.builder()
-                .title("서울 한바퀴 코스")
-                .dateRegion("서울")
-                .date(LocalDate.of(2025, 7, 1))
-                .createdAt(LocalDateTime.now())
-                .user(user)
-                .build();
+        Place p1 = placeRepo.save(
+                Place.builder().placeName("서울역").address("서울 중구").regionCode(1)
+                        .placeId("AA1").latitude(new BigDecimal("37.5547"))
+                        .longitude(new BigDecimal("126.9706")).build());
+        Place p2 = placeRepo.save(
+                Place.builder().placeName("시청역").address("서울 중구").regionCode(1)
+                        .placeId("AA2").latitude(new BigDecimal("37.5651"))
+                        .longitude(new BigDecimal("126.9753")).build());
+        Place p3 = placeRepo.save(
+                Place.builder().placeName("남산타워").address("서울 중구").regionCode(1)
+                        .placeId("AA3").latitude(new BigDecimal("37.5512"))
+                        .longitude(new BigDecimal("126.9882")).build());
 
-        // 4. DateCoursePlace 생성 및 course에 추가
-        DateCoursePlace cp1 = DateCoursePlace.builder()
-                .orderIndex(1).durationMinutes(40).place(a).dateCourse(course).build();
-        DateCoursePlace cp2 = DateCoursePlace.builder()
-                .orderIndex(2).durationMinutes(30).place(b).dateCourse(course).build();
-        DateCoursePlace cp3 = DateCoursePlace.builder()
-                .orderIndex(3).durationMinutes(50).place(c).dateCourse(course).build();
-        course.getPlaces().addAll(List.of(cp1, cp2, cp3));
+        /* 2. 코스 생성 */
+        Long courseId = courseService.createDateCourse(
+                user.getId(),
+                new DateCourseRequest("봄나들이", "서울", LocalDate.of(2026, 3, 20)));
+        log.info("코스 생성 ID={}", courseId);
 
-        // 5. 이동구간 생성 및 course에 추가
-        DateCourseLeg leg1 = DateCourseLeg.builder()
-                .dateCourse(course)
-                .fromPlace(a).toPlace(b)
-                .transportType("지하철").distanceM(1200).durationMinutes(8)
-                .build();
-        DateCourseLeg leg2 = DateCourseLeg.builder()
-                .dateCourse(course)
-                .fromPlace(b).toPlace(c)
-                .transportType("도보").distanceM(700).durationMinutes(12)
-                .build();
-        course.getLegs().addAll(List.of(leg1, leg2));
+        /* 3. 장소 3개 추가 */
+        DateCoursePlaceResponse a = courseService.addPlace(courseId,
+                new DateCoursePlaceRequest(p1.getId(), 1, LocalTime.of(1, 0), "기차역 구경"));
+        DateCoursePlaceResponse b = courseService.addPlace(courseId,
+                new DateCoursePlaceRequest(p2.getId(), 2, LocalTime.of(2, 0), "광장 산책"));
+        DateCoursePlaceResponse c = courseService.addPlace(courseId,
+                new DateCoursePlaceRequest(p3.getId(), 3, LocalTime.of(1, 30), "전망대 방문"));
+        log.info("장소 추가 결과: {}, {}, {}", a, b, c);
 
-        // 6. 전체 코스 저장 (cascade=ALL, places/legs 자동 저장)
-        dateCourseRepository.save(course);
+        /* 4. 코스 목록 조회 */
+        log.info("목록 조회: {}", courseService.readListByUser(user.getId()));
 
-        // 7. 검증 - 데이터 정상 저장/조회 여부
-        DateCourse loaded = dateCourseRepository.findById(course.getId()).orElseThrow();
+        /* 5. 코스 기본 정보 수정 */
+        courseService.updateDateCourse(courseId,
+                new DateCourseRequest("봄 서울투어", "서울특별시", LocalDate.of(2026, 4, 1)));
+        log.info("수정 후 코스: {}", courseService.readListByUser(user.getId()));
 
-        // 엔티티 값 콘솔로 출력
-        System.out.println("코스 제목: " + loaded.getTitle());
-        System.out.println("유저명: " + loaded.getUser().getUserName());
-        System.out.println("== 장소 목록 ==");
-        loaded.getPlaces().forEach(p ->
-                System.out.println("장소: " + p.getPlace().getPlaceName() + " (" + p.getDurationMinutes() + "분)")
+        /* 6. orderIndex 재배치 (시청역을 1번, 서울역을 2번, 남산타워 3번) */
+        DateCourse course = courseRepo.findById(courseId).orElseThrow();
+        List<OrderIndexDto> newOrders = Arrays.asList(
+                new OrderIndexDto(3),
+                new OrderIndexDto(2),
+                new OrderIndexDto(1)
         );
-        System.out.println("== 이동 경로 ==");
-        loaded.getLegs().forEach(l ->
-                System.out.println("이동: " + l.getFromPlace().getPlaceName() + " → " + l.getToPlace().getPlaceName() +
-                        " [" + l.getTransportType() + ", " + l.getDistanceM() + "m, " + l.getDurationMinutes() + "분]")
-        );
+        log.info("순서 변경 후 Places: {}", course.getPlaces().get(0).getOrderIndex());
 
-        // 커스텀 리포지토리 메서드로 조회도 확인
-        List<DateCoursePlace> loadedPlaces = dateCoursePlaceRepository.findByDateCourseIdOrderByOrderIndex(course.getId());
-        List<DateCourseLeg> loadedLegs = dateCourseLegRepository.findByDateCourseId(course.getId());
+        courseService.updateOrderIndexes(course, newOrders);
+        log.info("순서 변경 후 Places: {}", course.getPlaces().get(0).getOrderIndex());
 
-        System.out.println("== 커스텀 리포지토리로 조회한 장소 ==");
-        loadedPlaces.forEach(p ->
-                System.out.println("장소: " + p.getPlace().getPlaceName() + " (" + p.getDurationMinutes() + "분)")
-        );
-        System.out.println("== 커스텀 리포지토리로 조회한 이동 경로 ==");
-        loadedLegs.forEach(l ->
-                System.out.println("이동: " + l.getFromPlace().getPlaceName() + " → " + l.getToPlace().getPlaceName() +
-                        " [" + l.getTransportType() + ", " + l.getDistanceM() + "m]")
-        );
+        /* 7. 코스 삭제 */
+        courseService.delete(courseId);
+        log.info("삭제 후 코스 목록: {}", courseService.readListByUser(user.getId()));
 
-        System.out.println("==== [DevDataRunner: 테스트 종료] ====");
+        log.info("==== DevDataRunner 종료 ====");
     }
 }

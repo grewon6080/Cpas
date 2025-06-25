@@ -8,7 +8,5 @@ import java.util.Optional;
 
 public interface PlaceRepository extends JpaRepository<Place,Long> {
 
-    List<Place> findByPlaceNameContaining(String keyword);
 
-    Optional<Place> findByPlaceId(String placeId);
 }

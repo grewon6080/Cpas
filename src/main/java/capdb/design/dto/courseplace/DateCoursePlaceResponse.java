@@ -1,4 +1,4 @@
-package capdb.design.dto;
+package capdb.design.dto.courseplace;
 
 import java.time.LocalTime;
 
